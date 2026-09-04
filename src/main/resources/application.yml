@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/crm_db
+    username: crm_user
+    password: crm_password
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
