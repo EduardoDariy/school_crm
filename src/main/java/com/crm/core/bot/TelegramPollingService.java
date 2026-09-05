@@ -1,6 +1,7 @@
 package com.crm.core.bot;
 
 import com.crm.core.dto.DebtorReportDto;
+import com.crm.core.repository.LessonRepository;
 import com.crm.core.repository.SubscriptionRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,6 +9,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import com.crm.core.entity.Lesson;
 
 import java.util.List;
 import java.util.UUID;
@@ -26,6 +30,8 @@ public class TelegramPollingService {
     private long lastUpdateId = 0;
 
     private final UUID tenantId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+
+    private final LessonRepository lessonRepository;
 
     @Scheduled(fixedDelay = 2000)
     public void fetchUpdates() {
@@ -57,12 +63,47 @@ public class TelegramPollingService {
                                 System.out.println("🚀 Запущена генерация отчета...");
                                 sendDebtorsReport(chatId);
                             }
+
+                            if ("/debtors".equals(text)) {
+                                System.out.println("🚀 Запущена генерация отчета...");
+                                sendDebtorsReport(chatId);
+                            } else if ("/schedule".equals(text)) { // <--- Добавили обработчик
+                                System.out.println("🗓 Запрошено расписание...");
+                                sendSchedule(chatId);
+                            }
                         }
                     }
                 }
             }
         } catch (Exception e) {
             System.err.println("❌ Ошибка парсинга Telegram API: " + e.getMessage());
+        }
+    }
+
+    private void sendSchedule(String chatId) {
+        try {
+            // Ищем уроки, начиная с текущего момента
+            List<Lesson> lessons = lessonRepository.findUpcomingLessonsByChatId(chatId, LocalDateTime.now());
+
+            if (lessons.isEmpty()) {
+                telegramBot.sendMessage(chatId, "📭 У вас пока нет запланированных занятий.");
+                return;
+            }
+
+            StringBuilder report = new StringBuilder("📅 Ваше ближайшее расписание:\n\n");
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy в HH:mm");
+
+            // Берем только первые 5 занятий, чтобы не перегружать сообщение
+            lessons.stream().limit(5).forEach(l -> {
+                report.append("🔹 ").append(l.getStartTime().format(formatter))
+                        .append(" — ").append(l.getTopic() != null ? l.getTopic() : "Занятие")
+                        .append("\n");
+            });
+
+            telegramBot.sendMessage(chatId, report.toString());
+            System.out.println("✅ Расписание отправлено");
+        } catch (Exception e) {
+            System.err.println("❌ Ошибка при формировании расписания: " + e.getMessage());
         }
     }
 

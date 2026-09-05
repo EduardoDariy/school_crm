@@ -3,14 +3,15 @@ package com.crm.core.dto;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.Set;
-import lombok.Data;
+import java.util.List;
+import java.util.UUID;
 
-@Data
-public class ScheduleGenerationDto {
-    private LocalDate startDate;
-    private LocalDate endDate;
-    private Set<DayOfWeek> daysOfWeek;
-    private LocalTime startTime;
-    private LocalTime endTime;
-}
+public record ScheduleGenerationDto(
+        UUID groupId,
+        LocalDate startDate,
+        LocalDate endDate,
+        List<DayOfWeek> daysOfWeek,
+        LocalTime startTime,
+        LocalTime endTime,
+        String topicTemplate
+) {}

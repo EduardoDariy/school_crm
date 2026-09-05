@@ -44,14 +44,15 @@ public class LessonService {
         verifyGroupOwnership(tenantId, groupId);
 
         List<Lesson> lessons = new ArrayList<>();
-        LocalDate currentDate = dto.getStartDate();
+        // Обращаемся напрямую по имени поля
+        LocalDate currentDate = dto.startDate();
 
-        while (!currentDate.isAfter(dto.getEndDate())) {
-            if (dto.getDaysOfWeek().contains(currentDate.getDayOfWeek())) {
+        while (!currentDate.isAfter(dto.endDate())) {
+            if (dto.daysOfWeek().contains(currentDate.getDayOfWeek())) {
                 Lesson lesson = Lesson.builder()
                         .groupId(groupId)
-                        .startTime(LocalDateTime.of(currentDate, dto.getStartTime()))
-                        .endTime(LocalDateTime.of(currentDate, dto.getEndTime()))
+                        .startTime(LocalDateTime.of(currentDate, dto.startTime()))
+                        .endTime(LocalDateTime.of(currentDate, dto.endTime()))
                         .status(LessonStatus.PLANNED)
                         .build();
                 lesson.setTenantId(tenantId);
