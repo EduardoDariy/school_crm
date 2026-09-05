@@ -5,6 +5,8 @@ import com.crm.core.entity.Person;
 import com.crm.core.repository.PersonRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.UUID;
 
@@ -33,5 +35,9 @@ public class PersonService {
         person.setTenantId(tenantId);
 
         return personRepository.save(person);
+    }
+
+    public Page<Person> searchPersons(UUID tenantId, String search, org.springframework.data.domain.Pageable pageable) {
+        return personRepository.searchPersons(tenantId, search, pageable);
     }
 }

@@ -1,9 +1,10 @@
 package com.crm.core.controller;
 
-import com.crm.core.dto.PersonDto;
 import com.crm.core.entity.Person;
 import com.crm.core.service.PersonService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -15,10 +16,12 @@ public class PersonController {
 
     private final PersonService personService;
 
-    @PostMapping
-    public Person createPerson(
+    @GetMapping
+    public Page<Person> search(
             @RequestHeader("X-Tenant-ID") UUID tenantId,
-            @RequestBody PersonDto dto) {
-        return personService.createPerson(tenantId, dto);
+            @RequestParam(required = false, defaultValue = "") String query,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return personService.searchPersons(tenantId, query, PageRequest.of(page, size));
     }
 }

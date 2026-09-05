@@ -1,19 +1,23 @@
 package com.crm.core.repository;
 
 import com.crm.core.entity.Person;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.UUID;
 
 @Repository
 public interface PersonRepository extends JpaRepository<Person, UUID> {
 
-    // Блокировка при точном совпадении номера телефона внутри организации
     boolean existsByTenantIdAndPhoneNumber(UUID tenantId, String phoneNumber);
 
-    // Глобальный поиск по имени или телефону
-    List<Person> findAllByTenantIdAndFirstNameContainingIgnoreCaseOrPhoneNumberContaining(
-            UUID tenantId, String firstName, String phoneNumber);
+    @Query("SELECT p FROM Person p WHERE p.tenantId = :tenantId AND " +
+            "(LOWER(p.firstName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+            "LOWER(p.lastName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+            "p.phoneNumber LIKE CONCAT('%', :search, '%'))")
+    Page<Person> searchPersons(@Param("tenantId") UUID tenantId, @Param("search") String search, Pageable pageable);
 }
