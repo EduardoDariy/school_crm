@@ -1,13 +1,11 @@
 package com.crm.core.service;
 
-import com.crm.core.bot.CrmTelegramBot;
 import com.crm.core.dto.AttendanceDto;
 import com.crm.core.entity.Attendance;
 import com.crm.core.entity.Lesson;
 import com.crm.core.entity.enums.AttendanceStatus;
 import com.crm.core.repository.AttendanceRepository;
 import com.crm.core.repository.LessonRepository;
-import com.crm.core.repository.PersonRepository;
 import com.crm.core.repository.SubscriptionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,8 +22,6 @@ public class AttendanceService {
     private final AttendanceRepository attendanceRepository;
     private final LessonRepository lessonRepository;
     private final SubscriptionRepository subscriptionRepository;
-    private final PersonRepository personRepository; // Добавлено
-    private final CrmTelegramBot crmTelegramBot;     // Добавлено
 
     @Transactional
     public List<Attendance> saveBulkAttendance(UUID tenantId, UUID lessonId, List<AttendanceDto> dtos) {
@@ -58,15 +54,6 @@ public class AttendanceService {
                                 sub.setActive(false);
                             }
                             subscriptionRepository.save(sub);
-
-                            // Отправка уведомления в Telegram
-                            personRepository.findById(dto.getStudentId()).ifPresent(student -> {
-                                if (student.getMessengerId() != null && !student.getMessengerId().isEmpty()) {
-                                    String text = String.format("Здравствуйте, %s! Списано 1 занятие. Остаток по абонементу: %d",
-                                            student.getFirstName(), sub.getLessonsRemaining());
-                                    crmTelegramBot.sendMessage(student.getMessengerId(), text);
-                                }
-                            });
                         });
             }
             return attendance;
