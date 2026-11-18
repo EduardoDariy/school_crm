@@ -29,11 +29,22 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
         if (databaseUrl == null || databaseUrl.isBlank() || environment.getProperty("SPRING_DATASOURCE_URL") != null) {
             return;
         }
-        environment.getPropertySources().addFirst(new MapPropertySource(SOURCE_NAME, toDatasourceProperties(databaseUrl)));
+        Map<String, Object> properties = new LinkedHashMap<>(toDatasourceProperties(databaseUrl));
+
+        // Neon: приложение ходит через пул (DATABASE_URL, PgBouncer), а миграции Flyway — напрямую:
+        // advisory-блокировки и SET сессии через PgBouncer в режиме transaction не работают.
+        String unpooledUrl = environment.getProperty("DATABASE_URL_UNPOOLED");
+        if (unpooledUrl != null && !unpooledUrl.isBlank()) {
+            toDatasourceProperties(unpooledUrl).forEach((key, value) -> properties.put(
+                    // у Flyway логин называется user, а не username
+                    key.replace("spring.datasource.username", "spring.flyway.user")
+                            .replace("spring.datasource.", "spring.flyway."), value));
+        }
+        environment.getPropertySources().addFirst(new MapPropertySource(SOURCE_NAME, properties));
     }
 
     static Map<String, Object> toDatasourceProperties(String databaseUrl) {
-        URI uri = URI.create(databaseUrl.trim());
+        URI uri = URI.create(unquote(databaseUrl.trim()));
         String scheme = uri.getScheme();
         if (!"postgres".equals(scheme) && !"postgresql".equals(scheme)) {
             throw new IllegalArgumentException("DATABASE_URL должен начинаться с postgresql://");
@@ -71,6 +82,15 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
                 .filter(param -> !param.isEmpty())
                 .map(param -> param.startsWith("channel_binding=") ? "channelBinding=" + param.substring(16) : param)
                 .collect(Collectors.joining("&"));
+    }
+
+    /** Значение из .env-файла может прийти в кавычках (docker --env-file их не снимает). */
+    private static String unquote(String value) {
+        if (value.length() >= 2 && (value.startsWith("\"") && value.endsWith("\"")
+                || value.startsWith("'") && value.endsWith("'"))) {
+            return value.substring(1, value.length() - 1);
+        }
+        return value;
     }
 
     private static String decode(String value) {

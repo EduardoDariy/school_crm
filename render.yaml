@@ -8,13 +8,18 @@ services:
     name: school-crm-api
     runtime: docker
     plan: free
-    region: frankfurt
+    # Рядом с базой Neon (aws-us-east-2): каждый запрос к базе — без поездки через океан
+    region: ohio
     dockerfilePath: ./Dockerfile
     dockerContext: .
     autoDeploy: true
     envVars:
-      # Строка подключения из Neon как есть: postgresql://user:password@host/db?sslmode=require
+      # Строки подключения из Neon как есть (neon deploy кладёт их в .env.local):
+      # DATABASE_URL — через пул (-pooler), для запросов приложения;
+      # DATABASE_URL_UNPOOLED — напрямую, для миграций Flyway
       - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_URL_UNPOOLED
         sync: false
       # Суперадминистратор платформы (создаётся при первом запуске)
       - key: CRM_ADMIN_EMAIL

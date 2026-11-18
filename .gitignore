@@ -70,3 +70,10 @@ deploy/backups/
 *.pem
 id_rsa*
 id_ed25519*
+
+### Neon CLI: local credentials and env ###
+.env
+.env.local
+.env.*.local
+.neon
+node_modules/

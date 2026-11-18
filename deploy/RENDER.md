@@ -15,15 +15,21 @@
 
 ## 1. База данных — Neon
 
-1. Зарегистрируйтесь на <https://neon.tech> (удобно через GitHub).
-2. **Create project**: имя `school-crm`, регион **AWS Europe Central 1 (Frankfurt)** — рядом
-   с backend на Render. Версию Postgres оставьте по умолчанию.
-3. На странице проекта нажмите **Connect**:
-   - выключите переключатель **Connection pooling**;
-   - скопируйте строку вида
-     `postgresql://neondb_owner:...@ep-....eu-central-1.aws.neon.tech/neondb?sslmode=require`.
+Проект привязан к репозиторию через Neon CLI (`neon.ts`, локальный файл `.neon`).
+Строки подключения получаются командой `neon deploy` — она кладёт их в `.env.local`
+(в git не попадает):
 
-Строку вставляйте как есть — backend сам переведёт её в формат JDBC.
+| Переменная | Что это | Кому |
+|---|---|---|
+| `DATABASE_URL` | через пул PgBouncer (хост с `-pooler`) | запросы приложения |
+| `DATABASE_URL_UNPOOLED` | напрямую | миграции Flyway (им нужны блокировки сессии) |
+
+Без CLI: консоль Neon → проект → **Connect**; строка с включённым *Connection pooling* —
+`DATABASE_URL`, с выключенным — `DATABASE_URL_UNPOOLED`. Обе вставляются как есть, backend
+сам переводит их в формат JDBC.
+
+Регион базы — **aws-us-east-2**, поэтому backend в `render.yaml` размещён в **Ohio**: рядом
+с базой каждый запрос быстрее (из Европы каждый запрос пересекал бы океан).
 
 ## 2. Приложение — Render
 
@@ -35,7 +41,8 @@
 
    | Переменная | Значение |
    |---|---|
-   | `DATABASE_URL` | строка из Neon |
+   | `DATABASE_URL` | из `.env.local`, без кавычек |
+   | `DATABASE_URL_UNPOOLED` | из `.env.local`, без кавычек |
    | `CRM_ADMIN_EMAIL` | email суперадминистратора платформы, например `admin@crm.local` |
    | `CRM_ADMIN_PASSWORD` | придумайте надёжный пароль (не короче 8 символов) |
 
@@ -53,7 +60,8 @@
 
 ## 3. Тестовые данные
 
-С вашего компьютера (PowerShell, из папки проекта), подставив email и пароль из шага 2:
+В текущей базе Neon демо-школа `demo` уже заполнена — этот шаг нужен только для новой, пустой
+базы. С вашего компьютера (PowerShell, из папки проекта), подставив email и пароль из шага 2:
 
 ```powershell
 docker run --rm -e CRM_API=https://school-crm-api.onrender.com `
@@ -75,6 +83,7 @@ Swagger — на адресе backend: `https://school-crm-api.onrender.com/swag
 | Симптом | Что проверить |
 |---|---|
 | «Сервер недоступен» при входе | backend спит или ещё собирается — подождите 2 минуты; *Logs* сервиса `school-crm-api` |
-| В логе backend ошибка подключения к базе | `DATABASE_URL` скопирован целиком, pooling в Neon выключен |
+| В логе backend ошибка подключения к базе | обе строки скопированы целиком и без кавычек |
+| Миграция падает с `prepared statement` или блокировкой | задан `DATABASE_URL_UNPOOLED` (хост **без** `-pooler`) |
 | 404 на `/api/...` | адрес backend в правиле Rewrite (см. «Проверьте адрес backend») |
 | Backend перезапускается по кругу | *Logs*: если `OutOfMemoryError` — напишите, уменьшим потребление памяти |

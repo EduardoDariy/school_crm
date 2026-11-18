@@ -46,7 +46,12 @@ docker compose up -d                         # только db — для зап
 
 Backend принимает подключение к базе как `DATABASE_URL` в формате
 `postgresql://user:password@host/db?sslmode=require` (так его выдают Neon, Render и др.)
-или как обычные `SPRING_DATASOURCE_*`; порт — из `PORT` (по умолчанию 8080).
+или как обычные `SPRING_DATASOURCE_*`; порт — из `PORT` (по умолчанию 8080). Если задан ещё
+`DATABASE_URL_UNPOOLED` (Neon), через него идут миграции Flyway, а приложение — через пул.
+
+База Neon привязана через Neon CLI (`neon.ts`): `neon deploy` применяет настройки ветки и
+выгружает строки подключения в `.env.local` (в git не попадает). Skills Neon для Claude Code —
+в `.claude/skills`.
 
 ## Тестовые данные
 
