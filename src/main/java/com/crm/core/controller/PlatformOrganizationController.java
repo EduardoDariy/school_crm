@@ -8,6 +8,7 @@ import com.crm.core.entity.Organization;
 import com.crm.core.entity.enums.OrganizationStatus;
 import com.crm.core.entity.enums.StaffRole;
 import com.crm.core.service.OrganizationService;
+import com.crm.core.service.PipelineService;
 import com.crm.core.service.UserService;
 import com.crm.core.tenant.TenantContext;
 import jakarta.validation.Valid;
@@ -31,6 +32,7 @@ public class PlatformOrganizationController {
 
     private final OrganizationService organizationService;
     private final UserService userService;
+    private final PipelineService pipelineService;
 
     /** Создаёт администратора школы — дальше он сам заводит сотрудников. */
     @PostMapping("/{id}/admins")
@@ -44,7 +46,10 @@ public class PlatformOrganizationController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Organization create(@RequestBody OrganizationCreateDto dto) {
-        return organizationService.create(dto);
+        Organization organization = organizationService.create(dto);
+        // Стартовая воронка продаж — отдельной транзакцией уже в контексте новой школы
+        TenantContext.callAs(organization.getId(), pipelineService::createDefault);
+        return organization;
     }
 
     @GetMapping

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /** Сотрудники текущей организации. Все запросы ограничены ей через @TenantId. */
@@ -93,6 +94,13 @@ public class UserService {
         }
         PasswordPolicy.validate(newPassword);
         user.setPasswordHash(passwordEncoder.encode(newPassword));
+    }
+
+    /** Активный (не заблокированный) сотрудник этой школы с одной из ролей — для назначений. */
+    User requireActiveStaff(UUID id, Set<StaffRole> allowedRoles, String errorMessage) {
+        return userRepository.findById(id)
+                .filter(user -> !user.isBlocked() && allowedRoles.contains(user.getRole()))
+                .orElseThrow(() -> new IllegalArgumentException(errorMessage));
     }
 
     /** Если сотрудник — активный администратор, в школе должен остаться хотя бы ещё один. */

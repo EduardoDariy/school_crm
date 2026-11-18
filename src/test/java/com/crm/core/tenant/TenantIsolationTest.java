@@ -29,14 +29,16 @@ class TenantIsolationTest extends ApiTestSupport {
         mvc.perform(bearer(schoolA.adminToken(), get("/api/leads")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].tenantId").value(schoolA.id()));
+                .andExpect(jsonPath("$[0].id").value(leadId));
 
         mvc.perform(bearer(schoolB.adminToken(), get("/api/leads")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
 
         // Доступ по известному id чужой записи — «не найдено», а не успех
-        mvc.perform(bearer(schoolB.adminToken(), post("/api/leads/{id}/convert", leadId)))
+        mvc.perform(bearer(schoolB.adminToken(), post("/api/leads/{id}/win", leadId)))
+                .andExpect(status().isNotFound());
+        mvc.perform(bearer(schoolB.adminToken(), get("/api/leads/{id}/history", leadId)))
                 .andExpect(status().isNotFound());
     }
 
@@ -46,7 +48,7 @@ class TenantIsolationTest extends ApiTestSupport {
 
         mvc.perform(bearer(schoolA.adminToken(), post("/api/leads")).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Дубль\",\"phoneNumber\":\"+77010000002\"}"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isConflict());
 
         // Тот же номер в другой школе — это другой клиент
         createLead(schoolB, "Иван", "+77010000002");
@@ -55,8 +57,8 @@ class TenantIsolationTest extends ApiTestSupport {
     @Test
     void cannotEnrollStudentOfAnotherSchool() throws Exception {
         String leadId = createLead(schoolA, "Анна Смирнова", "+77010000003");
-        String studentOfA = read(mvc.perform(bearer(schoolA.adminToken(), post("/api/leads/{id}/convert", leadId)))
-                .andExpect(status().isOk()), "$.id");
+        String studentOfA = read(mvc.perform(bearer(schoolA.adminToken(), post("/api/leads/{id}/win", leadId)))
+                .andExpect(status().isOk()), "$.personId");
 
         String groupOfB = read(mvc.perform(bearer(schoolB.adminToken(), post("/api/groups"))
                         .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"English A1\"}"))
@@ -118,6 +120,23 @@ class TenantIsolationTest extends ApiTestSupport {
     private String createLead(School school, String name, String phone) throws Exception {
         return read(mvc.perform(bearer(school.adminToken(), post("/api/leads")).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"" + name + "\",\"phoneNumber\":\"" + phone + "\"}"))
-                .andExpect(status().isOk()), "$.id");
+                .andExpect(status().isCreated()), "$.id");
+    }
+
+    @Test
+    void pipelinesAndTasksAreIsolated() throws Exception {
+        String stageOfB = read(mvc.perform(bearer(schoolB.adminToken(), get("/api/pipelines")))
+                .andExpect(status().isOk()), "$[0].stages[1].id");
+        String leadOfA = createLead(schoolA, "Лид", "+77010000004");
+
+        // Этап чужой воронки нельзя использовать
+        mvc.perform(bearer(schoolA.adminToken(), post("/api/leads/{id}/stage", leadOfA))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"stageId\":\"" + stageOfB + "\"}"))
+                .andExpect(status().isBadRequest());
+
+        // Задачу на чужой лид не поставить
+        mvc.perform(bearer(schoolB.adminToken(), post("/api/tasks")).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"Позвонить\",\"dueAt\":\"2030-01-01T10:00:00\",\"leadId\":\"" + leadOfA + "\"}"))
+                .andExpect(status().isNotFound());
     }
 }

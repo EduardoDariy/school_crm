@@ -25,6 +25,13 @@ public class GlobalExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
+    @ExceptionHandler(DuplicateException.class)
+    public ProblemDetail handleDuplicate(DuplicateException e) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
+        problem.setProperty("existingId", e.getExistingId());
+        return problem;
+    }
+
     @ExceptionHandler(LoginFailedException.class)
     public ProblemDetail handleLoginFailed(LoginFailedException e) {
         return ProblemDetail.forStatusAndDetail(e.getStatus(), e.getMessage());
