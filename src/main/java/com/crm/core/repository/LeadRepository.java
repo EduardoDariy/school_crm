@@ -11,9 +11,9 @@ import java.util.List;
 public interface LeadRepository extends JpaRepository<Lead, UUID> {
 
     // Spring Data автоматически сгенерирует SQL-запросы по имени метода.
-    // Находим все неархивированные лиды конкретной организации (tenantId)
-    List<Lead> findAllByTenantIdAndIsArchivedFalse(UUID tenantId);
+    // Фильтр по организации добавляет Hibernate (@TenantId), здесь его указывать не нужно
+    List<Lead> findAllByIsArchivedFalse();
 
     // Проверка дублей по телефону внутри одной организации
-    boolean existsByTenantIdAndPhoneNumber(UUID tenantId, String phoneNumber);
+    boolean existsByPhoneNumber(String phoneNumber);
 }

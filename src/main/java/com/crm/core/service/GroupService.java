@@ -2,6 +2,7 @@ package com.crm.core.service;
 
 import com.crm.core.entity.Group;
 import com.crm.core.entity.Person;
+import com.crm.core.exception.NotFoundException;
 import com.crm.core.repository.GroupRepository;
 import com.crm.core.repository.PersonRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,29 +18,23 @@ public class GroupService {
     private final GroupRepository groupRepository;
     private final PersonRepository personRepository;
 
-    public Group createGroup(UUID tenantId, String name) {
+    public Group createGroup(String name) {
         Group group = Group.builder()
                 .name(name)
                 .isActive(true)
                 .build();
-        group.setTenantId(tenantId);
         return groupRepository.save(group);
     }
 
     @Transactional
-    public Group enrollStudent(UUID tenantId, UUID groupId, UUID studentId) {
+    public Group enrollStudent(UUID groupId, UUID studentId) {
+        // Оба поиска ограничены текущей организацией (@TenantId)
         Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new IllegalArgumentException("Группа не найдена"));
-
-        if (!group.getTenantId().equals(tenantId)) {
-            throw new IllegalArgumentException("Ошибка доступа: группа принадлежит другой организации");
-        }
-
+                .orElseThrow(() -> new NotFoundException("Группа не найдена"));
         Person student = personRepository.findById(studentId)
-                .orElseThrow(() -> new IllegalArgumentException("Ученик не найден"));
+                .orElseThrow(() -> new NotFoundException("Ученик не найден"));
 
-        // Добавляем ученика в коллекцию. Аннотация @Transactional гарантирует,
-        // что JPA автоматически сохранит эту связь в таблицу student_groups.
+        // @Transactional гарантирует, что JPA сохранит связь в таблицу student_groups
         group.getStudents().add(student);
         return groupRepository.save(group);
     }

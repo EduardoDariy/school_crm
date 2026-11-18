@@ -16,17 +16,12 @@ public class GroupController {
     private final GroupService groupService;
 
     @PostMapping
-    public Group createGroup(
-            @RequestHeader("X-Tenant-ID") UUID tenantId,
-            @RequestBody GroupDto dto) {
-        return groupService.createGroup(tenantId, dto.getName());
+    public Group createGroup(@RequestBody GroupDto dto) {
+        return groupService.createGroup(dto.getName());
     }
 
     @PostMapping("/{groupId}/enroll/{studentId}")
-    public Group enrollStudent(
-            @RequestHeader("X-Tenant-ID") UUID tenantId,
-            @PathVariable UUID groupId,
-            @PathVariable UUID studentId) {
-        return groupService.enrollStudent(tenantId, groupId, studentId);
+    public Group enrollStudent(@PathVariable UUID groupId, @PathVariable UUID studentId) {
+        return groupService.enrollStudent(groupId, studentId);
     }
 }

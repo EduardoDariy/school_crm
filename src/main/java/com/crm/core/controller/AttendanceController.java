@@ -18,9 +18,8 @@ public class AttendanceController {
 
     @PostMapping
     public List<Attendance> saveAttendance(
-            @RequestHeader("X-Tenant-ID") UUID tenantId,
             @PathVariable UUID lessonId,
             @RequestBody List<AttendanceDto> dtos) {
-        return attendanceService.saveBulkAttendance(tenantId, lessonId, dtos);
+        return attendanceService.saveBulkAttendance(lessonId, dtos);
     }
 }

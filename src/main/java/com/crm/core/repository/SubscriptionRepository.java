@@ -15,14 +15,14 @@ import java.util.UUID;
 public interface SubscriptionRepository extends JpaRepository<Subscription, UUID> {
 
     // Получаем самый старый активный абонемент для списания по FIFO
-    Optional<Subscription> findFirstByTenantIdAndStudentIdAndIsActiveTrueOrderByCreatedAtAsc(
-            UUID tenantId, UUID studentId);
+    Optional<Subscription> findFirstByStudentIdAndIsActiveTrueOrderByCreatedAtAsc(
+            UUID studentId);
 
-    List<Subscription> findAllByTenantIdAndStudentIdAndIsActiveTrue(UUID tenantId, UUID studentId);
+    List<Subscription> findAllByStudentIdAndIsActiveTrue(UUID studentId);
 
     @Query("SELECT new com.crm.core.dto.DebtorReportDto(p.id, p.firstName, p.lastName, p.phoneNumber, s.lessonsRemaining) " +
             "FROM Subscription s JOIN Person p ON s.studentId = p.id " +
-            "WHERE s.tenantId = :tenantId AND s.lessonsRemaining <= 0 AND p.isStudent = true")
-    List<DebtorReportDto> findDebtorsByTenantId(@Param("tenantId") UUID tenantId);
+            "WHERE s.lessonsRemaining <= 0 AND p.isStudent = true")
+    List<DebtorReportDto> findDebtors();
 
 }

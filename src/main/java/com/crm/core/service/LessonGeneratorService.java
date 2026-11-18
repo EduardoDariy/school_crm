@@ -18,20 +18,19 @@ import java.util.UUID;
 public class LessonGeneratorService {
 
     private final LessonRepository lessonRepository;
+    private final LessonService lessonService;
 
     @Transactional
-    public List<Lesson> generateLessons(UUID tenantId, ScheduleGenerationDto dto) {
-        List<Lesson> lessonsToSave = new ArrayList<>();
+    public List<Lesson> generateLessons(UUID groupId, ScheduleGenerationDto dto) {
+        lessonService.requireGroup(groupId);
 
-        // Обращение к record идет без приставки get
+        List<Lesson> lessonsToSave = new ArrayList<>();
         LocalDate currentDate = dto.startDate();
 
         while (!currentDate.isAfter(dto.endDate())) {
             if (dto.daysOfWeek().contains(currentDate.getDayOfWeek())) {
                 Lesson lesson = new Lesson();
-                lesson.setTenantId(tenantId);
-                lesson.setGroupId(dto.groupId());
-
+                lesson.setGroupId(groupId);
                 lesson.setStartTime(currentDate.atTime(dto.startTime()));
                 lesson.setEndTime(currentDate.atTime(dto.endTime()));
                 lesson.setStatus(LessonStatus.PLANNED);
@@ -42,6 +41,6 @@ public class LessonGeneratorService {
             currentDate = currentDate.plusDays(1);
         }
 
-        return (List<Lesson>) lessonRepository.saveAll(lessonsToSave);
+        return lessonRepository.saveAll(lessonsToSave);
     }
 }

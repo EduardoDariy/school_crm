@@ -1,9 +1,11 @@
 package com.crm.core.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.TenantId;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
@@ -18,7 +20,13 @@ public abstract class BaseEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "tenant_id", nullable = false)
+    /**
+     * Организация-владелец. Заполняется и проверяется Hibernate автоматически
+     * из {@link com.crm.core.tenant.TenantContext}; вручную не устанавливается.
+     */
+    @TenantId
+    @Setter(AccessLevel.NONE)
+    @Column(name = "tenant_id", nullable = false, updatable = false)
     private UUID tenantId;
 
     @CreationTimestamp

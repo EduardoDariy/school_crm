@@ -13,11 +13,11 @@ import java.util.UUID;
 @Repository
 public interface PersonRepository extends JpaRepository<Person, UUID> {
 
-    boolean existsByTenantIdAndPhoneNumber(UUID tenantId, String phoneNumber);
+    boolean existsByPhoneNumber(String phoneNumber);
 
-    @Query("SELECT p FROM Person p WHERE p.tenantId = :tenantId AND " +
+    @Query("SELECT p FROM Person p WHERE " +
             "(LOWER(p.firstName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
             "LOWER(p.lastName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
             "p.phoneNumber LIKE CONCAT('%', :search, '%'))")
-    Page<Person> searchPersons(@Param("tenantId") UUID tenantId, @Param("search") String search, Pageable pageable);
+    Page<Person> searchPersons(@Param("search") String search, Pageable pageable);
 }

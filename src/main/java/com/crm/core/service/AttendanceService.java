@@ -2,8 +2,8 @@ package com.crm.core.service;
 
 import com.crm.core.dto.AttendanceDto;
 import com.crm.core.entity.Attendance;
-import com.crm.core.entity.Lesson;
 import com.crm.core.entity.enums.AttendanceStatus;
+import com.crm.core.exception.NotFoundException;
 import com.crm.core.repository.AttendanceRepository;
 import com.crm.core.repository.LessonRepository;
 import com.crm.core.repository.SubscriptionRepository;
@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,12 +23,10 @@ public class AttendanceService {
     private final SubscriptionRepository subscriptionRepository;
 
     @Transactional
-    public List<Attendance> saveBulkAttendance(UUID tenantId, UUID lessonId, List<AttendanceDto> dtos) {
-        Lesson lesson = lessonRepository.findById(lessonId)
-                .orElseThrow(() -> new IllegalArgumentException("Урок не найден"));
-
-        if (!lesson.getTenantId().equals(tenantId)) {
-            throw new IllegalArgumentException("Ошибка доступа");
+    public List<Attendance> saveBulkAttendance(UUID lessonId, List<AttendanceDto> dtos) {
+        // Урок ищется только в текущей организации (@TenantId)
+        if (!lessonRepository.existsById(lessonId)) {
+            throw new NotFoundException("Урок не найден");
         }
 
         List<Attendance> existing = attendanceRepository.findAllByLessonId(lessonId);
@@ -44,10 +41,9 @@ public class AttendanceService {
                     .grade(dto.getGrade())
                     .note(dto.getNote())
                     .build();
-            attendance.setTenantId(tenantId);
 
             if (dto.getStatus() == AttendanceStatus.PRESENT) {
-                subscriptionRepository.findFirstByTenantIdAndStudentIdAndIsActiveTrueOrderByCreatedAtAsc(tenantId, dto.getStudentId())
+                subscriptionRepository.findFirstByStudentIdAndIsActiveTrueOrderByCreatedAtAsc(dto.getStudentId())
                         .ifPresent(sub -> {
                             sub.setLessonsRemaining(sub.getLessonsRemaining() - 1);
                             if (sub.getLessonsRemaining() <= 0) {
@@ -57,7 +53,7 @@ public class AttendanceService {
                         });
             }
             return attendance;
-        }).collect(Collectors.toList());
+        }).toList();
 
         return attendanceRepository.saveAll(listToSave);
     }

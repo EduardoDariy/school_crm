@@ -4,11 +4,9 @@ import com.crm.core.dto.PersonDto;
 import com.crm.core.entity.Person;
 import com.crm.core.repository.PersonRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
-import java.util.UUID;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -16,9 +14,8 @@ public class PersonService {
 
     private final PersonRepository personRepository;
 
-    public Person createPerson(UUID tenantId, PersonDto dto) {
-        if (dto.getPhoneNumber() != null &&
-                personRepository.existsByTenantIdAndPhoneNumber(tenantId, dto.getPhoneNumber())) {
+    public Person createPerson(PersonDto dto) {
+        if (dto.getPhoneNumber() != null && personRepository.existsByPhoneNumber(dto.getPhoneNumber())) {
             throw new IllegalArgumentException("Клиент с таким номером телефона уже существует");
         }
 
@@ -32,12 +29,10 @@ public class PersonService {
                 .isArchived(false)
                 .build();
 
-        person.setTenantId(tenantId);
-
         return personRepository.save(person);
     }
 
-    public Page<Person> searchPersons(UUID tenantId, String search, org.springframework.data.domain.Pageable pageable) {
-        return personRepository.searchPersons(tenantId, search, pageable);
+    public Page<Person> searchPersons(String search, Pageable pageable) {
+        return personRepository.searchPersons(search, pageable);
     }
 }
