@@ -1,24 +1,32 @@
-version: '3.8'
 services:
+  # База данных. Поднимается всегда, в том числе автоматически при запуске из IntelliJ IDEA
+  # (через spring-boot-docker-compose).
   db:
     image: postgres:16-alpine
     environment:
       POSTGRES_DB: crm_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: crm_user
+      POSTGRES_PASSWORD: crm_password
     ports:
       - "5432:5432"
 
+  # Бэкенд и фронтенд в контейнерах запускаются только с профилем app:
+  #   docker compose --profile app up --build
   backend:
+    profiles: ["app"]
     build: .
     ports:
       - "8080:8080"
     depends_on:
       - db
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/crm_db
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/crm_db
+      SPRING_DATASOURCE_USERNAME: crm_user
+      SPRING_DATASOURCE_PASSWORD: crm_password
+      SPRING_DOCKER_COMPOSE_ENABLED: "false"
 
   frontend:
+    profiles: ["app"]
     build: ./school-crm-ui
     ports:
       - "4200:80"

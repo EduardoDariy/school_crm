@@ -1,2 +1,21 @@
+# В репозитории все текстовые файлы хранятся с LF.
+# При checkout окончания строк нативные для ОС (CRLF в Windows, LF в WSL/Linux),
+# поэтому git в Windows и WSL не видит ложных изменений.
+* text=auto
+
+# Скрипты и файлы, которые выполняются в Linux/контейнерах, — всегда LF
 /mvnw text eol=lf
+*.sh  text eol=lf
+Dockerfile text eol=lf
+
+# Windows-скрипты — всегда CRLF
 *.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Бинарные файлы
+*.jar  binary
+*.png  binary
+*.jpg  binary
+*.ico  binary
+*.woff binary
+*.woff2 binary
