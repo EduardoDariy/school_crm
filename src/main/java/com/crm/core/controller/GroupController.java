@@ -3,6 +3,7 @@ package com.crm.core.controller;
 import com.crm.core.dto.GroupDto;
 import com.crm.core.entity.Group;
 import com.crm.core.service.GroupService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+@Tag(name = "Группы", description = "Учебные группы и зачисление")
 @RestController
 @RequestMapping("/api/groups")
 @RequiredArgsConstructor

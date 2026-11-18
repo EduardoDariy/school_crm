@@ -15,6 +15,12 @@ server:
   # Доверять X-Forwarded-For только от внутреннего прокси (nginx) — для IP в журнале входов
   forward-headers-strategy: native
 
+springdoc:
+  swagger-ui:
+    urls-primary-name: Школа
+    persist-authorization: true   # токен из «Authorize» сохраняется при перезагрузке страницы
+    operations-sorter: method
+
 crm:
   security:
     # Ключ подписи JWT, не короче 32 символов. В production задаётся обязательно.

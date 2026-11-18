@@ -5,6 +5,7 @@ import com.crm.core.dto.ScheduleGenerationDto;
 import com.crm.core.entity.Lesson;
 import com.crm.core.service.LessonGeneratorService;
 import com.crm.core.service.LessonService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+@Tag(name = "Расписание", description = "Занятия группы; администратор")
 @RestController
 @RequestMapping("/api/groups/{groupId}/lessons")
 @RequiredArgsConstructor

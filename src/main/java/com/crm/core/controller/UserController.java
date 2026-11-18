@@ -8,6 +8,7 @@ import com.crm.core.entity.LoginAttempt;
 import com.crm.core.service.LoginJournalService;
 import com.crm.core.service.UserService;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 /** Управление сотрудниками школы — только администратор школы. */
+@Tag(name = "Сотрудники", description = "Управление сотрудниками и журнал входов (администратор школы)")
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor

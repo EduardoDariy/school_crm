@@ -11,6 +11,7 @@ import com.crm.core.service.OrganizationService;
 import com.crm.core.service.UserService;
 import com.crm.core.tenant.TenantContext;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +23,7 @@ import java.util.UUID;
  * Platform API представителя CRM: создание и управление организациями.
  * Доступ только для суперадминистратора (см. SecurityConfig). Данные школ здесь не читаются.
  */
+@Tag(name = "Платформа: организации", description = "Подключение и блокировка школ")
 @RestController
 @RequestMapping("/api/platform/organizations")
 @RequiredArgsConstructor

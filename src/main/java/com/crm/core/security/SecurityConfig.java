@@ -50,6 +50,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/platform/auth/login").permitAll()
                         .requestMatchers("/error").permitAll()
+                        // Документация API (отключается свойствами springdoc в production)
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/platform/**").hasRole(CurrentUser.PLATFORM_ADMIN_ROLE)
                         // Права по ролям внутри школы — через @PreAuthorize на контроллерах
                         .requestMatchers("/api/**").hasAnyRole(staffRoles)

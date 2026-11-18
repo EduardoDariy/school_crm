@@ -35,3 +35,9 @@ docker compose up -d                         # только db — для зап
 
 Роли сотрудников: `ADMIN`, `MANAGER`, `TEACHER`, `FINANCE`. Данные каждой школы изолированы:
 организация определяется по токену, фильтрация выполняется Hibernate (`@TenantId`).
+
+## Документация API (Swagger)
+
+http://localhost:8080/swagger-ui.html — вверху справа переключатель «Школа» / «Платформа».
+Выполните `login`, скопируйте `accessToken`, нажмите **Authorize** и вставьте токен.
+В production отключается переменными `SPRINGDOC_API_DOCS_ENABLED=false` и `SPRINGDOC_SWAGGER_UI_ENABLED=false`.

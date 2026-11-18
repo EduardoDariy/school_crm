@@ -9,11 +9,14 @@ import com.crm.core.service.AuthService;
 import com.crm.core.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 /** Вход сотрудников школы. */
+@Tag(name = "Вход", description = "Вход сотрудника школы, текущий пользователь, смена пароля")
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -23,6 +26,7 @@ public class AuthController {
     private final UserService userService;
 
     @PostMapping("/login")
+    @SecurityRequirements // токен не нужен
     public TokenResponse login(@Valid @RequestBody LoginRequest request, HttpServletRequest http) {
         return authService.login(request, ClientInfo.from(http));
     }

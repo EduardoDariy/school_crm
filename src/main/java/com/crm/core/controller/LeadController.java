@@ -4,6 +4,7 @@ import com.crm.core.dto.LeadDto;
 import com.crm.core.entity.Lead;
 import com.crm.core.entity.Person;
 import com.crm.core.service.LeadService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+@Tag(name = "Лиды", description = "Администратор, менеджер")
 @RestController
 @RequestMapping("/api/leads")
 @RequiredArgsConstructor
