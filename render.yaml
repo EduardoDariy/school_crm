@@ -1,0 +1,59 @@
+# Render Blueprint: бесплатный хостинг backend + интерфейса. База — Neon (бесплатная, без срока).
+# Инструкция: deploy/RENDER.md
+#
+#   school-crm      — интерфейс (статический сайт, не засыпает); /api/* проксируется в backend
+#   school-crm-api  — backend (Docker, бесплатный план: засыпает после 15 минут без запросов)
+services:
+  - type: web
+    name: school-crm-api
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    autoDeploy: true
+    envVars:
+      # Строка подключения из Neon как есть: postgresql://user:password@host/db?sslmode=require
+      - key: DATABASE_URL
+        sync: false
+      # Суперадминистратор платформы (создаётся при первом запуске)
+      - key: CRM_ADMIN_EMAIL
+        sync: false
+      - key: CRM_ADMIN_PASSWORD
+        sync: false
+      - key: CRM_JWT_SECRET
+        generateValue: true
+      - key: SPRING_JPA_SHOW_SQL
+        value: "false"
+      - key: SPRING_DOCKER_COMPOSE_ENABLED
+        value: "false"
+      - key: SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
+        value: "5"
+      # 512 МБ памяти на бесплатном плане: компактные настройки JVM и быстрый старт
+      - key: JAVA_TOOL_OPTIONS
+        value: "-XX:MaxRAMPercentage=70 -XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:ReservedCodeCacheSize=48m -Xss512k -XX:+ExitOnOutOfMemoryError"
+
+  - type: web
+    name: school-crm
+    runtime: static
+    rootDir: school-crm-ui
+    buildCommand: npm ci --no-audit --no-fund && npm run build
+    staticPublishPath: dist/school-crm-ui/browser
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+    routes:
+      # Если Render выдал backend другой адрес — поправьте здесь (или в Redirects/Rewrites сайта)
+      - type: rewrite
+        source: /api/*
+        destination: https://school-crm-api.onrender.com/api/*
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff

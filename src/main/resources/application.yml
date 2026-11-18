@@ -12,6 +12,8 @@ spring:
     open-in-view: false
 
 server:
+  # Облачные платформы (Render и др.) передают порт в переменной PORT
+  port: ${PORT:8080}
   # Доверять X-Forwarded-For только от внутреннего прокси (nginx) — для IP в журнале входов
   forward-headers-strategy: native
 

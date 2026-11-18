@@ -38,9 +38,15 @@ docker compose up -d                         # только db — для зап
 
 ## Развёртывание на сервере
 
-Production-конфигурация (HTTPS через Caddy, закрытые база и backend, секреты в `.env`, бэкапы)
-лежит в `deploy/`. Пошаговая инструкция для бесплатного сервера Oracle Cloud —
-[deploy/DEPLOY.md](deploy/DEPLOY.md).
+- **Render + Neon** (бесплатно, всё в браузере, обновление при push) — `render.yaml`,
+  инструкция [deploy/RENDER.md](deploy/RENDER.md). Backend засыпает без запросов.
+- **Свой сервер** (Oracle Cloud Always Free или любой VPS с Ubuntu): HTTPS через Caddy,
+  закрытые база и backend, секреты в `.env`, бэкапы — `deploy/`, инструкция
+  [deploy/DEPLOY.md](deploy/DEPLOY.md).
+
+Backend принимает подключение к базе как `DATABASE_URL` в формате
+`postgresql://user:password@host/db?sslmode=require` (так его выдают Neon, Render и др.)
+или как обычные `SPRING_DATASOURCE_*`; порт — из `PORT` (по умолчанию 8080).
 
 ## Тестовые данные
 
