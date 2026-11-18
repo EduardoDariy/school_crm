@@ -1,24 +1,18 @@
-# Этап 1: Сборка приложения в контейнере (Node.js не нужен на хосте)
-FROM node:18-alpine AS build
+# Этап 1: сборка приложения в контейнере (Node.js на хосте не нужен)
+FROM node:22-alpine AS build
 WORKDIR /app
 
-# Копируем списки зависимостей
+# Зависимости ставятся строго по package-lock.json
 COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
 
-# Устанавливаем зависимости
-RUN npm install
-
-# Копируем весь код и собираем продакшен-версию
+# Копируем код и собираем production-версию
 COPY . .
-RUN npm run build --configuration=production
+RUN npm run build
 
-# Этап 2: Раздача статики через Nginx
+# Этап 2: раздача статики через Nginx
 FROM nginx:alpine
-
-# Копируем конфиг Nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Копируем собранные файлы (путь для Angular 17+)
 COPY --from=build /app/dist/school-crm-ui/browser /usr/share/nginx/html
 
 EXPOSE 80
