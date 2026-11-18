@@ -56,3 +56,7 @@ replay_pid*
 
 # Compiled class file
 *.class
+
+### Project docs (local only) ###
+CRM_CONTEXT.md
+MVP_SCOPE.md
