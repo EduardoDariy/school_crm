@@ -1,0 +1,79 @@
+# Production-запуск на одном сервере (например, Oracle Cloud Always Free).
+#
+#   cd deploy && docker compose -f docker-compose.prod.yml up -d --build
+#
+# Наружу открыт только Caddy (80/443): он получает HTTPS-сертификат Let's Encrypt и проксирует
+# в frontend (nginx), который отдаёт интерфейс и передаёт /api в backend. База и backend снаружи
+# недоступны. Секреты — в deploy/.env (создаётся setup-server.sh, в git не попадает).
+name: school-crm
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: crm_db
+      POSTGRES_USER: crm_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?задайте POSTGRES_PASSWORD в .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crm_user -d crm_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    logging: *logging
+
+  backend:
+    build: ..
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/crm_db
+      SPRING_DATASOURCE_USERNAME: crm_user
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_DOCKER_COMPOSE_ENABLED: "false"
+      SPRING_JPA_SHOW_SQL: "false"
+      CRM_JWT_SECRET: ${CRM_JWT_SECRET:?задайте CRM_JWT_SECRET в .env}
+      CRM_ADMIN_EMAIL: ${CRM_ADMIN_EMAIL:?задайте CRM_ADMIN_EMAIL в .env}
+      CRM_ADMIN_PASSWORD: ${CRM_ADMIN_PASSWORD:?задайте CRM_ADMIN_PASSWORD в .env}
+      CRM_ADMIN_NAME: ${CRM_ADMIN_NAME:-Администратор CRM}
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError"
+    mem_limit: 1g
+    logging: *logging
+
+  frontend:
+    build: ../school-crm-ui
+    restart: unless-stopped
+    depends_on:
+      - backend
+    logging: *logging
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - frontend
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      CRM_DOMAIN: ${CRM_DOMAIN:?задайте CRM_DOMAIN в .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    logging: *logging
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

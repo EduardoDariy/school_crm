@@ -8,6 +8,8 @@
  *   CRM_API        адрес backend, по умолчанию http://host.docker.internal:8080
  *   CRM_SUBDOMAIN  поддомен школы (demo)
  *   CRM_EMAIL / CRM_PASSWORD  администратор школы (admin@demo.kz / demo12345)
+ *   CRM_PLATFORM_EMAIL / CRM_PLATFORM_PASSWORD  суперадмин платформы: если школы ещё нет,
+ *                  скрипт создаст её вместе с администратором (удобно на чистом сервере)
  *
  * Повторный запуск ничего не делает, если сотрудники из набора уже созданы.
  */
@@ -16,6 +18,8 @@ const API = (process.env.CRM_API ?? 'http://host.docker.internal:8080').replace(
 const SUBDOMAIN = process.env.CRM_SUBDOMAIN ?? 'demo';
 const ADMIN_EMAIL = process.env.CRM_EMAIL ?? 'admin@demo.kz';
 const ADMIN_PASSWORD = process.env.CRM_PASSWORD ?? 'demo12345';
+const PLATFORM_EMAIL = process.env.CRM_PLATFORM_EMAIL ?? '';
+const PLATFORM_PASSWORD = process.env.CRM_PLATFORM_PASSWORD ?? '';
 const STAFF_PASSWORD = 'demo12345';
 const TZ = 'Asia/Almaty';
 
@@ -135,9 +139,29 @@ const TASKS = [
 
 // ---------- Сценарий ----------
 
+/** На чистом сервере: создаёт школу и её администратора от имени суперадмина платформы. */
+async function ensureSchool() {
+  try {
+    return await login(ADMIN_EMAIL, ADMIN_PASSWORD);
+  } catch (error) {
+    if (error.status !== 401 || !PLATFORM_EMAIL) {
+      throw error;
+    }
+  }
+  console.log(`Школы «${SUBDOMAIN}» нет — создаю через платформу`);
+  const platform = await call(null, 'POST', '/platform/auth/login', { email: PLATFORM_EMAIL, password: PLATFORM_PASSWORD });
+  const org = await call(platform.accessToken, 'POST', '/platform/organizations', {
+    name: 'Демо-школа английского', subdomain: SUBDOMAIN, timezone: TZ,
+  });
+  await call(platform.accessToken, 'POST', `/platform/organizations/${org.id}/admins`, {
+    email: ADMIN_EMAIL, fullName: 'Директор Демо-школы', password: ADMIN_PASSWORD,
+  });
+  return login(ADMIN_EMAIL, ADMIN_PASSWORD);
+}
+
 async function main() {
   console.log(`Backend: ${API}, школа «${SUBDOMAIN}»`);
-  const admin = await login(ADMIN_EMAIL, ADMIN_PASSWORD);
+  const admin = await ensureSchool();
 
   const existing = await call(admin, 'GET', '/users');
   if (existing.some(u => u.email === STAFF[0].email)) {

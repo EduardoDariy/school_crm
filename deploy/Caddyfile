@@ -1,0 +1,15 @@
+# Caddy сам получает и продлевает сертификат Let's Encrypt для домена из CRM_DOMAIN
+# (например, crm.203.0.113.10.sslip.io — бесплатный домен, указывающий на IP сервера).
+{$CRM_DOMAIN} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	reverse_proxy frontend:80
+}

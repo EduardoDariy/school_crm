@@ -60,3 +60,7 @@ replay_pid*
 ### Project docs (local only) ###
 CRM_CONTEXT.md
 MVP_SCOPE.md
+
+### Deploy secrets and backups ###
+deploy/.env
+deploy/backups/

@@ -36,6 +36,12 @@ docker compose up -d                         # только db — для зап
 Роли сотрудников: `ADMIN`, `MANAGER`, `TEACHER`, `FINANCE`. Данные каждой школы изолированы:
 организация определяется по токену, фильтрация выполняется Hibernate (`@TenantId`).
 
+## Развёртывание на сервере
+
+Production-конфигурация (HTTPS через Caddy, закрытые база и backend, секреты в `.env`, бэкапы)
+лежит в `deploy/`. Пошаговая инструкция для бесплатного сервера Oracle Cloud —
+[deploy/DEPLOY.md](deploy/DEPLOY.md).
+
 ## Тестовые данные
 
 Скрипт `scripts/seed-demo.mjs` наполняет школу через API: 5 сотрудников (менеджеры,
