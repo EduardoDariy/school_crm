@@ -1,0 +1,10 @@
+spring:
+  jpa:
+    show-sql: false
+
+crm:
+  security:
+    jwt-secret: test-only-jwt-secret-at-least-32-bytes-long
+    bootstrap-admin:
+      email: root@crm.test
+      password: root-password

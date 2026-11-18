@@ -7,3 +7,21 @@ spring:
     hibernate:
       ddl-auto: validate
     show-sql: true
+    # Сессия Hibernate открывается в сервисе/репозитории, уже после определения организации
+    # из токена. Это важно для изоляции данных (@TenantId) и TenantContext.callAs.
+    open-in-view: false
+
+server:
+  # Доверять X-Forwarded-For только от внутреннего прокси (nginx) — для IP в журнале входов
+  forward-headers-strategy: native
+
+crm:
+  security:
+    # Ключ подписи JWT, не короче 32 символов. В production задаётся обязательно.
+    jwt-secret: ${CRM_JWT_SECRET:}
+    token-ttl: 12h
+    # Первый суперадминистратор (создаётся при запуске, если их ещё нет)
+    bootstrap-admin:
+      email: ${CRM_ADMIN_EMAIL:}
+      password: ${CRM_ADMIN_PASSWORD:}
+      full-name: ${CRM_ADMIN_NAME:}

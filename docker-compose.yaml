@@ -24,6 +24,10 @@ services:
       SPRING_DATASOURCE_USERNAME: crm_user
       SPRING_DATASOURCE_PASSWORD: crm_password
       SPRING_DOCKER_COMPOSE_ENABLED: "false"
+      # Только для локальной разработки! В production — свои значения через секреты.
+      CRM_JWT_SECRET: dev-only-jwt-secret-change-me-in-production
+      CRM_ADMIN_EMAIL: admin@crm.local
+      CRM_ADMIN_PASSWORD: admin12345
 
   frontend:
     profiles: ["app"]

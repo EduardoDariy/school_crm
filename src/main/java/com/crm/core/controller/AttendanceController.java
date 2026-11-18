@@ -4,6 +4,7 @@ import com.crm.core.dto.AttendanceDto;
 import com.crm.core.entity.Attendance;
 import com.crm.core.service.AttendanceService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/lessons/{lessonId}/attendance")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
 public class AttendanceController {
 
     private final AttendanceService attendanceService;

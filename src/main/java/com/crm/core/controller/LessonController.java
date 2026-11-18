@@ -6,6 +6,7 @@ import com.crm.core.entity.Lesson;
 import com.crm.core.service.LessonGeneratorService;
 import com.crm.core.service.LessonService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/groups/{groupId}/lessons")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
 public class LessonController {
 
     private final LessonService lessonService;

@@ -2,9 +2,13 @@ package com.crm.core.service;
 
 import com.crm.core.dto.AttendanceDto;
 import com.crm.core.entity.Attendance;
+import com.crm.core.entity.Lesson;
 import com.crm.core.entity.enums.AttendanceStatus;
+import com.crm.core.entity.enums.StaffRole;
 import com.crm.core.exception.NotFoundException;
 import com.crm.core.repository.AttendanceRepository;
+import com.crm.core.repository.GroupRepository;
+import com.crm.core.security.CurrentUser;
 import com.crm.core.repository.LessonRepository;
 import com.crm.core.repository.SubscriptionRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,13 +24,24 @@ public class AttendanceService {
 
     private final AttendanceRepository attendanceRepository;
     private final LessonRepository lessonRepository;
+    private final GroupRepository groupRepository;
     private final SubscriptionRepository subscriptionRepository;
 
     @Transactional
     public List<Attendance> saveBulkAttendance(UUID lessonId, List<AttendanceDto> dtos) {
         // Урок ищется только в текущей организации (@TenantId)
-        if (!lessonRepository.existsById(lessonId)) {
-            throw new NotFoundException("Урок не найден");
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new NotFoundException("Урок не найден"));
+
+        // Преподаватель отмечает посещаемость только своих групп; чужой урок для него «не найден»
+        CurrentUser user = CurrentUser.get();
+        if (user.hasRole(StaffRole.TEACHER)) {
+            boolean ownGroup = groupRepository.findById(lesson.getGroupId())
+                    .map(group -> user.id().equals(group.getTeacherId()))
+                    .orElse(false);
+            if (!ownGroup) {
+                throw new NotFoundException("Урок не найден");
+            }
         }
 
         List<Attendance> existing = attendanceRepository.findAllByLessonId(lessonId);

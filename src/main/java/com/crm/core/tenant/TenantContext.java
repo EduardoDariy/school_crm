@@ -2,10 +2,12 @@ package com.crm.core.tenant;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 /**
  * Текущая организация (tenant) для потока, обрабатывающего запрос.
- * Заполняется {@link TenantFilter}, читается Hibernate через {@link TenantIdentifierResolver}.
+ * Заполняется {@code AuthContextFilter} по токену сотрудника, читается Hibernate
+ * через {@link TenantIdentifierResolver}.
  */
 public final class TenantContext {
 
@@ -28,5 +30,24 @@ public final class TenantContext {
 
     public static void clear() {
         CURRENT.remove();
+    }
+
+    /**
+     * Выполняет действие от имени организации (вход по поддомену, действия представителя CRM).
+     * Сессия Hibernate фиксирует организацию при открытии, поэтому вызывать только вне
+     * уже начатой транзакции (open-in-view выключен).
+     */
+    public static <T> T callAs(UUID tenantId, Supplier<T> action) {
+        UUID previous = CURRENT.get();
+        CURRENT.set(tenantId);
+        try {
+            return action.get();
+        } finally {
+            if (previous == null) {
+                CURRENT.remove();
+            } else {
+                CURRENT.set(previous);
+            }
+        }
     }
 }

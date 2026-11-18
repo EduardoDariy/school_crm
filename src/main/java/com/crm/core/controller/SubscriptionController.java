@@ -4,6 +4,7 @@ import com.crm.core.dto.SubscriptionDto;
 import com.crm.core.entity.Subscription;
 import com.crm.core.service.SubscriptionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/subscriptions")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ADMIN', 'FINANCE')")
 public class SubscriptionController {
 
     private final SubscriptionService subscriptionService;

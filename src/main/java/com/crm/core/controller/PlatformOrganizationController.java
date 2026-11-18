@@ -1,9 +1,16 @@
 package com.crm.core.controller;
 
 import com.crm.core.dto.OrganizationCreateDto;
+import com.crm.core.dto.user.CreateUserRequest;
+import com.crm.core.dto.user.SchoolAdminRequest;
+import com.crm.core.dto.user.UserView;
 import com.crm.core.entity.Organization;
 import com.crm.core.entity.enums.OrganizationStatus;
+import com.crm.core.entity.enums.StaffRole;
 import com.crm.core.service.OrganizationService;
+import com.crm.core.service.UserService;
+import com.crm.core.tenant.TenantContext;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -13,7 +20,7 @@ import java.util.UUID;
 
 /**
  * Platform API представителя CRM: создание и управление организациями.
- * TODO(auth): доступ только для роли суперадминистратора — добавляется на шаге аутентификации.
+ * Доступ только для суперадминистратора (см. SecurityConfig). Данные школ здесь не читаются.
  */
 @RestController
 @RequestMapping("/api/platform/organizations")
@@ -21,6 +28,16 @@ import java.util.UUID;
 public class PlatformOrganizationController {
 
     private final OrganizationService organizationService;
+    private final UserService userService;
+
+    /** Создаёт администратора школы — дальше он сам заводит сотрудников. */
+    @PostMapping("/{id}/admins")
+    @ResponseStatus(HttpStatus.CREATED)
+    public UserView createSchoolAdmin(@PathVariable UUID id, @Valid @RequestBody SchoolAdminRequest request) {
+        organizationService.get(id); // 404, если организации нет
+        return TenantContext.callAs(id, () -> userService.create(
+                new CreateUserRequest(request.email(), request.fullName(), StaffRole.ADMIN, request.password())));
+    }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

@@ -10,4 +10,6 @@ import java.util.UUID;
 @Repository
 public interface GroupRepository extends JpaRepository<Group, UUID> {
     List<Group> findAllByIsActiveTrue();
+
+    List<Group> findAllByTeacherIdAndIsActiveTrue(UUID teacherId);
 }
