@@ -64,3 +64,9 @@ MVP_SCOPE.md
 ### Deploy secrets and backups ###
 deploy/.env
 deploy/backups/
+
+### Private keys - never commit ###
+*.key
+*.pem
+id_rsa*
+id_ed25519*
